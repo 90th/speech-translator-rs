@@ -1,6 +1,6 @@
 use cpal::{traits::{DeviceTrait, HostTrait, StreamTrait}, SampleFormat, StreamConfig};
 use hound::{WavWriter, WavSpec};
-use std::{fs::File, sync::{Arc, Mutex}};
+use std::{fs::{File, metadata}, sync::{Arc, Mutex}};
 use anyhow::Result;
 use dasp::sample::ToSample;
 
@@ -77,10 +77,29 @@ impl AudioRecorder {
         )
     }
 
-    pub fn stop_recording(&mut self) {
+    fn get_file_size(file_path: &str) -> Result<u64, std::io::Error> {
+        let metadata = metadata(file_path)?;
+        Ok(metadata.len())
+    }
+
+    pub fn stop_recording(&mut self, output_file_path: &str) {
         if let Some(writer) = self.writer.lock().unwrap().take() {
             writer.finalize().expect("Failed to finalize WAV writer");
             println!("Recording stopped.");
+        }
+
+        // Check the file size
+        match Self::get_file_size(output_file_path) {
+            Ok(size) => {
+                const MAX_SIZE: u64 = 25 * 1024 * 1024; // 25MB in bytes
+                if size > MAX_SIZE {
+                    println!("Error: The file size exceeds the 25MB limit. File size: {} bytes", size);
+                     std::fs::remove_file(output_file_path).unwrap();
+                } else {
+                    println!("File size is within the acceptable limit. Size: {} bytes", size);
+                }
+            },
+            Err(e) => eprintln!("Failed to get file size: {}", e),
         }
 
         if let Some(stream) = self.stream.take() {

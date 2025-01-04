@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
     recorder.start_recording(audio_file_path);
     println!("Recording... Press Enter to stop.");
     io::stdin().read_line(&mut String::new()).unwrap();
-    recorder.stop_recording();
+    recorder.stop_recording(audio_file_path);
 
     // transcribe audio
     let stt = SpeechToText::new(api_token.clone());
