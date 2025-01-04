@@ -7,7 +7,6 @@ speech-translator-rs is a Rust-based application that records audio, transcribes
 - Record audio and save it as a WAV file
 - Transcribe audio to text using the Groq API
 - Translate transcribed text to a target language using the Groq API
-- Environment variable support for API tokens
 
 ## Requirements
 
